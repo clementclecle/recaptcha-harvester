@@ -1,0 +1,86 @@
+# Copy this file to config.yaml and edit. config.yaml is git-ignored, so your
+# real target and credentials stay out of version control. Every value here is
+# the default. Delete anything you don't need to change.
+#
+# Environment variables override this file: PORT, HOST, API_KEY, MAX_CONCURRENT,
+# POOL_SIZE, CHROME_PATH, HEADLESS, FARM_ENABLED, FARM_MODE.
+
+# Loopback only by default. Set to 0.0.0.0 to expose the service. If you do,
+# set apiKey too, or anyone who can reach the port can spend your proxies.
+host: "127.0.0.1"
+port: 3131
+
+# Optional shared secret. When set, /solve, /token and /stats require it as
+# either "X-API-Key: <key>" or "Authorization: Bearer <key>". /health stays open.
+# apiKey: "change-me"
+
+# How many solves run at once. Omit to size to the machine's CPU cores.
+# The browser pool derives from this at ~4 solves per browser.
+# maxConcurrent: 8
+
+# Pin the pool size instead of deriving it from maxConcurrent.
+# poolSize: 2
+
+headless: true
+
+# Path to a real Chrome install. Leave commented to use the Chromium that
+# `npm run setup` downloads. A real Chrome often scores better.
+#   Windows: "C:/Program Files/Google/Chrome/Application/chrome.exe"
+#   macOS:   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+#   Linux:   "/usr/bin/google-chrome"
+# chromePath: "/usr/bin/google-chrome"
+
+# ---------------------------------------------------------------------------
+# Farm mode
+#
+# Continuously mints tokens for ONE fixed target and serves them from an
+# in-memory buffer via GET /token. Off by default; POST /solve works either way.
+# ---------------------------------------------------------------------------
+farm:
+  enabled: false
+
+  # balanced | throughput | quality. Presets for the recycle/reuse knobs below.
+  #   balanced   : 25 tokens or 90s per page, light mouse, 2 workers/proxy
+  #   throughput : 150 tokens or 300s per page, no mouse, unlimited per proxy
+  #   quality    : 5 tokens or 45s per page, full mouse, 1 worker/proxy
+  mode: balanced
+
+  # The one target the farm mints for. /solve falls back to these for any field
+  # a request omits. Below is 2captcha's public v3-enterprise demo page, which is
+  # there to be tested against. Swap in your own.
+  target:
+    websiteURL: "https://2captcha.com/demo/recaptcha-v3-enterprise"
+    websiteKey: "6Lel38UnAAAAAMRwKj9qLH2Ws4Tf2uTDQCyfgR6b"
+    pageAction: "demo_action"
+
+  # One proxy per line: ip:port:user:pass, ip:port, or http://user:pass@ip:port.
+  # No file means direct connections from the server's own IP.
+  proxyFile: "proxies.txt"
+
+  # --- autoscaler ---------------------------------------------------------
+  # Starts at maxConcurrent and adjusts from live CPU. The worker ceiling comes
+  # from TOTAL ram (ramUsableFraction * totalmem / estPerWorkerRamMB), so it
+  # sizes to any host. os.freemem() is only a soft gate on Linux and Windows;
+  # it means nothing on macOS and is ignored there.
+  # minWorkers: 1
+  # maxWorkers: 128
+  # intervalMs: 5000
+  # cpuLow: 0.70              # grow below this ...
+  # cpuHigh: 0.88             # ... shrink above it
+  # estPerWorkerRamMB: 150
+  # ramUsableFraction: 0.70
+  # ramLow: 0.75              # Linux/Windows freemem grow gate
+  # ramHigh: 0.90             # Linux/Windows freemem brake
+
+  # --- token buffer -------------------------------------------------------
+  # tokenTtlMs: 110000        # drop tokens older than this (Google's is ~120s)
+  # bufferCapacity: 500
+  # bufferMode: block         # block = idle workers when full | drop = keep freshest
+
+  # --- preset overrides ---------------------------------------------------
+  # Any of these wins over the `mode` preset.
+  # maxTokensPerWorker: 25
+  # maxWorkerAgeMs: 90000
+  # humanize: light           # none | light | full
+  # mintDelayMs: 1500
+  # maxWorkersPerProxy: 2     # 0 = unlimited

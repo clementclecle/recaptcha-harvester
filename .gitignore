@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+
+# Local config and credentials. Never commit these.
+config.yaml
+proxies.txt
+.env
+.env.*
+
+*.log
+npm-debug.log*
+
+.DS_Store
+.idea/
+.vscode/
+*.swp

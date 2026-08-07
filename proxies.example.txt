@@ -1,0 +1,15 @@
+# Copy to proxies.txt (git-ignored) and put one proxy per line.
+# Blank lines and lines starting with # are ignored.
+#
+# Supported formats:
+#   ip:port:user:pass
+#   ip:port
+#   http://user:pass@ip:port
+#
+# Semicolons are tolerated as separators (ip:port;user;pass).
+# Duplicates and unparseable lines are skipped with a warning at startup.
+# Without a proxies.txt the farm connects directly from the server's own IP.
+
+198.51.100.10:8080:username:password
+198.51.100.11:8080:username:password
+203.0.113.7:3128

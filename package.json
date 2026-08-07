@@ -1,0 +1,63 @@
+{
+  "name": "recaptcha-harvester",
+  "version": "2.1.0",
+  "description": "Self-hosted reCAPTCHA Enterprise v3 solver and token harvester, built on Playwright",
+  "main": "src/server.js",
+  "license": "MIT",
+  "author": "Clement Aubert",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clementclecle/recaptcha-harvester.git"
+  },
+  "bugs": {
+    "url": "https://github.com/clementclecle/recaptcha-harvester/issues"
+  },
+  "homepage": "https://github.com/clementclecle/recaptcha-harvester#readme",
+  "keywords": [
+    "recaptcha",
+    "recaptcha-v3",
+    "recaptcha-enterprise",
+    "captcha",
+    "captcha-solver",
+    "captcha-harvester",
+    "token-harvester",
+    "playwright",
+    "stealth",
+    "anti-bot",
+    "self-hosted"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "setup": "npx playwright install chromium",
+    "test": "node --test \"test/unit/*.test.js\"",
+    "test:solve": "node test/test-solve.js",
+    "test:score": "node test/test-score.js",
+    "build": "pkg src/server.js --targets node20-macos-x64,node20-macos-arm64,node20-linux-x64,node20-win-x64 --output dist/recaptcha-harvester --no-bytecode --public --compress GZip"
+  },
+  "files": [
+    "src/",
+    "config.example.yaml",
+    "proxies.example.txt",
+    "README.md",
+    "LICENSE"
+  ],
+  "pkg": {
+    "assets": [
+      "config.example.yaml"
+    ]
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "js-yaml": "^4.1.1",
+    "playwright": "^1.52.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.14.1"
+  }
+}

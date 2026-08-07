@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+docs
+test
+.git
+.github
+.idea
+.vscode
+.DS_Store
+*.log
+
+# Never bake credentials into an image.
+config.yaml
+proxies.txt
+.env
+.env.*
