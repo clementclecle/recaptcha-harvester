@@ -155,7 +155,7 @@ rest of the fingerprint said otherwise.
 ## Failure handling
 
 `errors.js` maps thrown errors to stable codes, shared by the HTTP layer and farm workers.
-The `hasProxy` flag tips the ambiguous cases: a timeout or a failed `enterprise.js` fetch
+The `hasProxy` flag tips the ambiguous cases: a timeout or a failed reCAPTCHA script fetch
 is almost always the proxy's fault when one is in use, and classifying it that way is what
 lets the provider cool the right thing down.
 
