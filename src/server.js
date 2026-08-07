@@ -74,6 +74,8 @@ app.post("/solve", requireApiKey, async (req, res) => {
   const websiteKey = body.websiteKey || target.websiteKey;
   const pageAction = body.pageAction || target.pageAction;
   const proxy = body.proxy;
+  // Enterprise unless explicitly turned off, which keeps the old default.
+  const enterprise = (body.enterprise ?? target.enterprise) !== false;
 
   const required = { websiteURL, websiteKey, pageAction };
   const absent = Object.keys(required).filter((k) => !required[k]);
@@ -88,7 +90,9 @@ app.post("/solve", requireApiKey, async (req, res) => {
     return res.status(400).json({ error: `websiteURL is not a valid URL: ${websiteURL}` });
   }
 
-  console.log(`[solve] url=${origin} proxy=${proxyLabel(proxy)}`);
+  console.log(
+    `[solve] url=${origin} type=${enterprise ? "enterprise" : "v3"} proxy=${proxyLabel(proxy)}`,
+  );
   const start = Date.now();
   await sem.acquire();
 
@@ -98,6 +102,7 @@ app.post("/solve", requireApiKey, async (req, res) => {
       websiteURL,
       websiteKey,
       pageAction,
+      enterprise,
       proxy,
       userAgent: pool.userAgent,
     });

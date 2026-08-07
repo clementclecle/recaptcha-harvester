@@ -106,15 +106,24 @@ function proxyLabel(str) {
   return parsed ? parsed.server.replace(/^https?:\/\//, "") : "invalid";
 }
 
+// Enterprise and plain v3 differ only in which script they load and which
+// namespace holds ready/execute. Everything else about solving them is the same.
+const SCRIPT_URL = {
+  enterprise: "https://www.google.com/recaptcha/enterprise.js",
+  v3: "https://www.google.com/recaptcha/api.js",
+};
+
 /**
  * Build a page that's ready to mint. Does the expensive one-time work: context
- * (which pins the proxy for its lifetime), stealth, origin navigation,
- * enterprise.js, and the ready() handshake. After this, minting is just
+ * (which pins the proxy for its lifetime), stealth, origin navigation, the
+ * reCAPTCHA script, and the ready() handshake. After this, minting is just
  * execute().
+ *
+ * enterprise: true for reCAPTCHA Enterprise, false for plain v3.
  */
 async function setupSolverPage(
   browser,
-  { websiteURL, websiteKey, proxy, userAgent, timeout = 15000 },
+  { websiteURL, websiteKey, proxy, userAgent, enterprise = true, timeout = 15000 },
 ) {
   const proxyConfig = parseProxy(proxy);
   if (proxy && !proxyConfig) throw new Error(`Malformed proxy: ${proxyLabel(proxy)}`);
@@ -144,35 +153,43 @@ async function setupSolverPage(
 
     await simulateHuman(page);
 
-    const alreadyLoaded = await page.evaluate(
-      () =>
-        typeof grecaptcha !== "undefined" &&
-        typeof grecaptcha.enterprise !== "undefined" &&
-        typeof grecaptcha.enterprise.execute === "function",
-    );
+    const variant = enterprise ? "enterprise" : "v3";
+
+    const alreadyLoaded = await page.evaluate((ent) => {
+      if (typeof grecaptcha === "undefined") return false;
+      const api = ent ? grecaptcha.enterprise : grecaptcha;
+      return !!api && typeof api.execute === "function";
+    }, enterprise);
 
     if (!alreadyLoaded) {
+      const src = `${SCRIPT_URL[variant]}?render=${websiteKey}`;
       await page.evaluate(
-        (siteKey) =>
+        ({ url, name }) =>
           new Promise((resolve, reject) => {
             const s = document.createElement("script");
-            s.src = `https://www.google.com/recaptcha/enterprise.js?render=${siteKey}`;
+            s.src = url;
             s.onload = resolve;
-            s.onerror = () => reject(new Error("Failed to load enterprise.js"));
+            s.onerror = () => reject(new Error(`Failed to load recaptcha script (${name})`));
             document.head.appendChild(s);
           }),
-        websiteKey,
+        { url: src, name: variant },
       );
     }
 
     await page.waitForFunction(
-      () =>
-        typeof grecaptcha !== "undefined" && typeof grecaptcha.enterprise !== "undefined",
+      (ent) => {
+        if (typeof grecaptcha === "undefined") return false;
+        const api = ent ? grecaptcha.enterprise : grecaptcha;
+        return !!api && typeof api.execute === "function";
+      },
+      enterprise,
       { timeout: 10000 },
     );
 
     await page.evaluate(
-      () => new Promise((resolve) => grecaptcha.enterprise.ready(resolve)),
+      (ent) =>
+        new Promise((resolve) => (ent ? grecaptcha.enterprise : grecaptcha).ready(resolve)),
+      enterprise,
     );
 
     return { context, page, origin };
@@ -182,16 +199,20 @@ async function setupSolverPage(
   }
 }
 
-/** humanize: none | light | full */
-async function mintToken(page, { websiteKey, pageAction, humanize = "none" }) {
+/** humanize: none | light | full. `enterprise` must match setupSolverPage. */
+async function mintToken(
+  page,
+  { websiteKey, pageAction, humanize = "none", enterprise = true },
+) {
   if (humanize === "full") await simulateHuman(page);
   else if (humanize === "light") await simulateHumanLight(page);
 
   await sleep(300 + Math.random() * 500);
 
   const token = await page.evaluate(
-    ({ siteKey, action }) => grecaptcha.enterprise.execute(siteKey, { action }),
-    { siteKey: websiteKey, action: pageAction },
+    ({ siteKey, action, ent }) =>
+      (ent ? grecaptcha.enterprise : grecaptcha).execute(siteKey, { action }),
+    { siteKey: websiteKey, action: pageAction, ent: enterprise },
   );
 
   if (!token) throw new Error("Empty token received");
@@ -205,6 +226,7 @@ async function solve(browser, params) {
     const token = await mintToken(page, {
       websiteKey: params.websiteKey,
       pageAction: params.pageAction,
+      enterprise: params.enterprise !== false,
     });
     const userAgent = await page.evaluate(() => navigator.userAgent);
     return { token, userAgent };

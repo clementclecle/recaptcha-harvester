@@ -36,7 +36,7 @@ function classifyError(err, hasProxy) {
     code = hasProxy ? PROXY : TIMEOUT;
   } else if (msg.includes("ERR_NAME_NOT_RESOLVED")) {
     code = DNS;
-  } else if (msg.includes("enterprise.js")) {
+  } else if (msg.includes("recaptcha script") || msg.includes("enterprise.js")) {
     code = hasProxy ? PROXY : RECAPTCHA_LOAD;
   } else if (msg.includes("Empty token")) {
     code = EMPTY_TOKEN;

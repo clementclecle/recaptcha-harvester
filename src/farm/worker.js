@@ -71,6 +71,7 @@ class FarmWorker {
     const { context, page } = await setupSolverPage(this.browser, {
       websiteURL: this.target.websiteURL,
       websiteKey: this.target.websiteKey,
+      enterprise: this.target.enterprise,
       proxy: this.proxy,
       userAgent: this.userAgent,
     });
@@ -126,6 +127,7 @@ class FarmWorker {
           const token = await mintToken(this.page, {
             websiteKey: this.target.websiteKey,
             pageAction: this.target.pageAction,
+            enterprise: this.target.enterprise,
             humanize: this.cfg.humanize,
           });
 

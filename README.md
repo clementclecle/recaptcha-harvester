@@ -1,15 +1,21 @@
 # recaptcha-harvester
 
-Self-hosted reCAPTCHA Enterprise v3 solver. It runs a pool of warm, stealth-patched
-Chromium instances behind a small HTTP API and hands back tokens.
+Self-hosted reCAPTCHA v3 solver, both Enterprise and standard. It runs a pool of warm,
+stealth-patched Chromium instances behind a small HTTP API and hands back tokens.
 
 The approach is deliberately boring: there is no fingerprint spoofing to maintain, because
 a real browser produces real canvas, WebGL, audio and font data on its own. What's left is
 keeping the automation markers out of the page, moving the mouse like a person, and calling
-`grecaptcha.enterprise.execute()` from the right origin.
+`grecaptcha.execute()` from the right origin.
 
 Request and response shapes match Capsolver's `ReCaptchaV3EnterpriseTask`, so it drops into
 an existing integration by changing the base URL.
+
+**Supported:** reCAPTCHA Enterprise v3 (default) and plain reCAPTCHA v3, selected per
+request with the `enterprise` flag. The two differ only in which script gets loaded
+(`enterprise.js` vs `api.js`) and which namespace holds `execute()`; everything else about
+solving them is identical. reCAPTCHA v2 and invisible are **not** supported, since they
+need a challenge to be solved rather than just a score.
 
 ## Requirements
 
@@ -34,6 +40,7 @@ Check that the machine can actually produce tokens before wiring anything up:
 
 ```bash
 npm run test:score            # solves a demo captcha and prints the score Google gave it
+ENTERPRISE=false npm run test:score   # same, against a plain v3 site key
 ```
 
 That posts a real token to 2captcha's public demo verifier. Anything at 0.7 or above is
@@ -53,13 +60,20 @@ curl -X POST http://127.0.0.1:3131/solve \
     "websiteURL": "https://example.com/checkout",
     "websiteKey": "6Lxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "pageAction": "checkout",
-    "proxy": "1.2.3.4:8080:user:pass"
+    "proxy": "1.2.3.4:8080:user:pass",
+    "enterprise": true
   }'
 ```
 
 `proxy` is optional and accepts `ip:port`, `ip:port:user:pass` or
-`http://user:pass@ip:port`. Any omitted field falls back to `farm.target` in the config, if
-one is set, so with a target configured, an empty `{}` body is a valid request.
+`http://user:pass@ip:port`.
+
+`enterprise` is optional and defaults to `true`. Set it to `false` for a plain reCAPTCHA v3
+site key. Getting it wrong fails with `errorCode: 4`, because Google serves the two site
+key types from different endpoints and rejects a mismatch.
+
+Any omitted field falls back to `farm.target` in the config, if one is set, so with a
+target configured, an empty `{}` body is a valid request.
 
 ```json
 {
@@ -84,8 +98,8 @@ Failures return HTTP 500 with a stable code:
 | 4 | reCAPTCHA failed to load |
 | 5 | empty token returned |
 
-Timeouts and enterprise.js load failures are reported as proxy errors when a proxy was in
-use, since that is nearly always the cause.
+Timeouts and script-load failures are reported as proxy errors when a proxy was in use,
+since that is nearly always the cause.
 
 ### GET /token
 
@@ -124,6 +138,7 @@ farm:
     websiteURL: "https://example.com/checkout"
     websiteKey: "6Lxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     pageAction: "checkout"
+    enterprise: true
 ```
 
 Workers recycle on a schedule, rebuilding the context and rotating to the next proxy.

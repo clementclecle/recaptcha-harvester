@@ -96,6 +96,8 @@ if (farm.enabled) {
   } catch {
     throw new Error(`farm.target.websiteURL is not a valid URL: ${farm.target.websiteURL}`);
   }
+  // Enterprise unless explicitly disabled.
+  farm.target.enterprise = farm.target.enterprise !== false;
 
   if (!MODE_PRESETS[farm.mode]) {
     if (farm.mode) {

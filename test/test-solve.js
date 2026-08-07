@@ -3,6 +3,7 @@
 //
 // Usage: node test/test-solve.js [proxy]
 // Target can be overridden with WEBSITE_URL / WEBSITE_KEY / PAGE_ACTION.
+// Set ENTERPRISE=false for a plain reCAPTCHA v3 site key.
 const { launchBrowser, detectUserAgent } = require("../src/pool");
 const { solve, proxyLabel } = require("../src/solver");
 const config = require("../src/config");
@@ -12,6 +13,7 @@ const WEBSITE_URL =
   process.env.WEBSITE_URL || "https://2captcha.com/demo/recaptcha-v3-enterprise";
 const WEBSITE_KEY = process.env.WEBSITE_KEY || "6Lel38UnAAAAAMRwKj9qLH2Ws4Tf2uTDQCyfgR6b";
 const PAGE_ACTION = process.env.PAGE_ACTION || "demo_action";
+const ENTERPRISE = process.env.ENTERPRISE !== "false";
 
 async function main() {
   const proxy = process.argv[2] || undefined;
@@ -21,13 +23,17 @@ async function main() {
 
   try {
     const userAgent = await detectUserAgent(browser);
-    console.log(`Solving ${new URL(WEBSITE_URL).origin} via ${proxyLabel(proxy)}...`);
+    console.log(
+      `Solving ${new URL(WEBSITE_URL).origin} ` +
+        `(${ENTERPRISE ? "enterprise" : "v3"}) via ${proxyLabel(proxy)}...`,
+    );
     const start = Date.now();
 
     const result = await solve(browser, {
       websiteURL: WEBSITE_URL,
       websiteKey: WEBSITE_KEY,
       pageAction: PAGE_ACTION,
+      enterprise: ENTERPRISE,
       proxy,
       userAgent,
     });

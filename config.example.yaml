@@ -52,6 +52,8 @@ farm:
     websiteURL: "https://2captcha.com/demo/recaptcha-v3-enterprise"
     websiteKey: "6Lel38UnAAAAAMRwKj9qLH2Ws4Tf2uTDQCyfgR6b"
     pageAction: "demo_action"
+    # true for reCAPTCHA Enterprise, false for a plain v3 site key.
+    enterprise: true
 
   # One proxy per line: ip:port:user:pass, ip:port, or http://user:pass@ip:port.
   # No file means direct connections from the server's own IP.

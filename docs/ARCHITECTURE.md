@@ -51,10 +51,16 @@ Setup does the following, in order:
    HTML shell. reCAPTCHA only cares which origin `execute()` runs from, so downloading the
    real page is wasted bandwidth and wasted time.
 4. **Simulate a person** arriving: cursor settles, wanders, sometimes scrolls.
-5. **Load enterprise.js** if the page didn't already ship it.
+5. **Load the reCAPTCHA script** if the page didn't already ship it: `enterprise.js` for
+   Enterprise, `api.js` for plain v3.
 6. **Absorb the `ready()` handshake**, so every later mint is a bare `execute()`.
 
 `mintToken()` is then just optional mouse activity, a short pause, and the call.
+
+Enterprise and plain v3 differ in exactly two places: the script URL above, and whether
+`ready`/`execute` live on `grecaptcha.enterprise` or `grecaptcha`. The `enterprise` flag
+picks between them and defaults to true. Google rejects a site key sent to the wrong
+endpoint, so a mismatch surfaces as a script-load failure rather than a bad token.
 
 `solve()` composes both and always tears the context down. `/solve` uses it directly.
 

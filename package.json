@@ -1,7 +1,7 @@
 {
   "name": "recaptcha-harvester",
   "version": "2.1.0",
-  "description": "Self-hosted reCAPTCHA Enterprise v3 solver and token harvester, built on Playwright",
+  "description": "Self-hosted reCAPTCHA v3 solver and token harvester (Enterprise and standard), built on Playwright",
   "main": "src/server.js",
   "license": "MIT",
   "author": "Clement Aubert",
