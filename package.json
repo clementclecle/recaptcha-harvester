@@ -27,12 +27,12 @@
     "self-hosted"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node src/server.js",
     "setup": "npx playwright install chromium",
-    "test": "node --test \"test/unit/*.test.js\"",
+    "test": "node test/run.js",
     "test:solve": "node test/test-solve.js",
     "test:score": "node test/test-score.js",
     "build": "pkg src/server.js --targets node20-macos-x64,node20-macos-arm64,node20-linux-x64,node20-win-x64 --output dist/recaptcha-harvester --no-bytecode --public --compress GZip"

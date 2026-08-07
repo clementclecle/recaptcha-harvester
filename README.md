@@ -20,7 +20,7 @@ need a challenge to be solved rather than just a score.
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 20 or newer (22+ recommended, since 20 is past its upstream end-of-life)
 - ~500 MB RAM per browser instance, plus roughly 150 MB per farm worker
 - Optional: HTTP proxies, and a real Google Chrome install (it tends to score better than
   bundled Chromium)
