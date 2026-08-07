@@ -8,9 +8,11 @@ a real browser produces real canvas, WebGL, audio and font data on its own. What
 keeping the automation markers out of the page, moving the mouse like a person, and calling
 `grecaptcha.execute()` from the right origin.
 
-Request and response shapes match Capsolver's `ReCaptchaV3Task` and
-`ReCaptchaV3EnterpriseTask`, so it drops into an existing integration by changing the base
-URL.
+The task fields are the ones Capsolver's `ReCaptchaV3Task` and `ReCaptchaV3EnterpriseTask`
+already take (`websiteURL`, `websiteKey`, `pageAction`, `proxy`), so porting an existing
+integration is mostly mechanical. It is not wire-compatible, though: this is a single
+synchronous `POST /solve` that returns the token, rather than Capsolver's
+`createTask`/`getTaskResult` polling pair.
 
 **Supported:** reCAPTCHA Enterprise v3 (default) and plain reCAPTCHA v3, selected per
 request with the `enterprise` flag. The two differ only in which script gets loaded
