@@ -71,13 +71,18 @@ async function simulateHumanLight(page, { width, height } = VIEWPORT) {
   await sleep(150 + Math.random() * 250);
 }
 
-// Accepts ip:port, ip:port:user:pass, or http://user:pass@ip:port.
+// Accepts ip:port, ip:port:user:pass, scheme URLs (http://ip:port,
+// socks5://user:pass@ip:port, ...), or http://user:pass@ip:port.
 function parseProxy(str) {
   if (!str) return null;
 
-  if (str.includes("@")) {
+  if (str.includes("@") || str.includes("://")) {
     try {
-      const url = new URL(str.startsWith("http") ? str : `http://${str}`);
+      // Prepend http:// only when no scheme is present: a socks5:// entry
+      // would otherwise be double-prefixed and parse as host "socks5",
+      // silently dropping the credentials.
+      const url = new URL(str.includes("://") ? str : `http://${str}`);
+      if (!url.hostname || !url.port) return null;
       const proxy = { server: `${url.protocol}//${url.hostname}:${url.port}` };
       if (url.username) {
         proxy.username = decodeURIComponent(url.username);
@@ -91,6 +96,10 @@ function parseProxy(str) {
 
   const parts = str.split(":");
   if (parts.length < 2) return null;
+  const port = Number(parts[1]);
+  // A bad host or port must fail here, not at browser launch: proxy files are
+  // validated at load time precisely so bad entries are skipped with a warning.
+  if (!parts[0] || !Number.isInteger(port) || port < 1 || port > 65535) return null;
   const proxy = { server: `http://${parts[0]}:${parts[1]}` };
   if (parts.length >= 4) {
     proxy.username = parts[2];

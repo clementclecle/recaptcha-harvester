@@ -4,6 +4,7 @@
 # Supported formats:
 #   ip:port:user:pass
 #   ip:port
+#   scheme URLs: http://ip:port, socks5://user:pass@ip:port, ...
 #   http://user:pass@ip:port
 #
 # Semicolons are tolerated as separators (ip:port;user;pass).
