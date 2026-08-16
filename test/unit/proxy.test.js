@@ -44,9 +44,23 @@ test("parseProxy keeps scheme and credentials of a socks5 url", () => {
   });
 });
 
+// URL drops the port when it is the scheme default, so an entry that spelled
+// :80 or :443 out reaches us looking portless. It is still a valid proxy.
+test("parseProxy accepts scheme-default ports", () => {
+  assert.deepEqual(parseProxy("http://1.2.3.4:80"), { server: "http://1.2.3.4" });
+  assert.deepEqual(parseProxy("https://bob:hunter2@1.2.3.4:443"), {
+    server: "https://1.2.3.4",
+    username: "bob",
+    password: "hunter2",
+  });
+  assert.deepEqual(parseProxy("http://1.2.3.4"), { server: "http://1.2.3.4" });
+});
+
 test("parseProxy rejects scheme urls missing host or port", () => {
   assert.equal(parseProxy("http://"), null);
-  assert.equal(parseProxy("http://1.2.3.4"), null);
+  // socks5 has no default port, so this one really is unusable.
+  assert.equal(parseProxy("socks5://1.2.3.4"), null);
+  assert.equal(parseProxy("socks5://1.2.3.4:0"), null);
 });
 
 test("parseProxy rejects junk", () => {
@@ -56,7 +70,15 @@ test("parseProxy rejects junk", () => {
 });
 
 test("parseProxy rejects bad hosts and ports", () => {
-  for (const input of ["1.2.3.4:notaport", "1.2.3.4:0", "1.2.3.4:65536", ":8080"]) {
+  const bad = [
+    "1.2.3.4:notaport",
+    "1.2.3.4:0",
+    "1.2.3.4:65536",
+    ":8080",
+    "1.2.3.4: 8080", // Number() tolerates the space, the server string does not
+    "1.2.3.4:0x1f",
+  ];
+  for (const input of bad) {
     assert.equal(parseProxy(input), null, `expected null for ${JSON.stringify(input)}`);
   }
 });
