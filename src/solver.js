@@ -71,14 +71,23 @@ async function simulateHumanLight(page, { width, height } = VIEWPORT) {
   await sleep(150 + Math.random() * 250);
 }
 
-// Accepts ip:port, ip:port:user:pass, or http://user:pass@ip:port.
+// Accepts ip:port, ip:port:user:pass, scheme URLs (http://ip:port,
+// socks5://user:pass@ip:port, ...), or http://user:pass@ip:port.
 function parseProxy(str) {
   if (!str) return null;
 
-  if (str.includes("@")) {
+  if (str.includes("@") || str.includes("://")) {
     try {
-      const url = new URL(str.startsWith("http") ? str : `http://${str}`);
-      const proxy = { server: `${url.protocol}//${url.hostname}:${url.port}` };
+      // Prepend http:// only when no scheme is present: a socks5:// entry
+      // would otherwise be double-prefixed and parse as host "socks5",
+      // silently dropping the credentials.
+      const url = new URL(str.includes("://") ? str : `http://${str}`);
+      // Only schemes without a default port have to carry one: URL drops :80
+      // from http and :443 from https, so requiring url.port would reject the
+      // very entries that spelled the port out. url.host keeps it when set.
+      const schemeHasPort = url.protocol === "http:" || url.protocol === "https:";
+      if (!url.hostname || url.port === "0" || (!url.port && !schemeHasPort)) return null;
+      const proxy = { server: `${url.protocol}//${url.host}` };
       if (url.username) {
         proxy.username = decodeURIComponent(url.username);
         proxy.password = decodeURIComponent(url.password);
@@ -91,6 +100,12 @@ function parseProxy(str) {
 
   const parts = str.split(":");
   if (parts.length < 2) return null;
+  // A bad host or port must fail here, not at browser launch: proxy files are
+  // validated at load time precisely so bad entries are skipped with a warning.
+  // Digits only, because the server string is built from the raw text: Number()
+  // alone would wave through " 8080" and 0x1f and hand Chromium a bad port.
+  const port = Number(parts[1]);
+  if (!parts[0] || !/^\d+$/.test(parts[1]) || port < 1 || port > 65535) return null;
   const proxy = { server: `http://${parts[0]}:${parts[1]}` };
   if (parts.length >= 4) {
     proxy.username = parts[2];

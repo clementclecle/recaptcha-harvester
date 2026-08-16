@@ -68,7 +68,8 @@ curl -X POST http://127.0.0.1:3131/solve \
   }'
 ```
 
-`proxy` is optional and accepts `ip:port`, `ip:port:user:pass` or
+`proxy` is optional and accepts `ip:port`, `ip:port:user:pass`, a scheme URL
+such as `http://1.2.3.4:8080` or `socks5://user:pass@1.2.3.4:1080`, or
 `http://user:pass@ip:port`.
 
 `enterprise` is optional and defaults to `true`. Set it to `false` for a plain reCAPTCHA v3
